@@ -24,7 +24,7 @@ export default async function asyncRootLayout({
   return (
     <html lang="en">
       <Provider session={session}>
-      <body className={inter.className}>{children}</body>
+        <body className={inter.className}>{children}</body>
       </Provider>
     </html>
   );

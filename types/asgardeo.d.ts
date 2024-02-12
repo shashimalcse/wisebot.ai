@@ -9,8 +9,12 @@ interface CodeIntrospectResult {
     isExpired: boolean;
 }
 
-interface CodeValidateData {
+interface CodeValidateResult {
     username: string;
     tenantdomain: string;
     realm: string;
+}
+
+interface OrganizationExistsResult {
+    available: boolean;
 }

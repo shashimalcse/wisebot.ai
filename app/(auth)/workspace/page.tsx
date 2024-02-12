@@ -8,6 +8,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+
+const isWorkSpaceNameAvailable = async (name: string): Promise<boolean> => {
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_HOSTED_URL!}/api/workspace/check-workspace?workspace-name=${name}`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+  
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+  
+    const data = await response.json();
+    return data;
+  };
+
 export default function WorkSpace() {
 
     return (
@@ -39,12 +57,13 @@ const InputForm = () => {
         },
     })
 
-    function onSubmit(data: z.infer<typeof FormSchema>) {
+    async function onSubmit(data: z.infer<typeof FormSchema>) {
+        const result =  await isWorkSpaceNameAvailable(data.workspace)
         toast({
             title: "You submitted the following values:",
             description: (
                 <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                    <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+                    <code className="text-white">{result? "available" : "already exists"}</code>
                 </pre>
             ),
         })
