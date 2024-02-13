@@ -8,12 +8,12 @@ export async function GET(request: NextRequest) {
     const confirmation = searchParams.get('confirmation')
     if (confirmation) {
         const introspectResult = await asgardeoClient.intropectConfirmationCode(confirmation)
-        if (introspectResult) {
-            const validateResult = await asgardeoClient.validateConfirmationCode(confirmation)    
-            if (validateResult) {
-                redirect(`/workspace`)
-            }
-            
+        if (introspectResult && !introspectResult.isExpired) {
+            // const validateResult = await asgardeoClient.validateConfirmationCode(confirmation)    
+            // if (validateResult) {
+            //     redirect(`/workspace`)
+            // }
+            redirect(`/workspace?username=${introspectResult.user.username}&confirmation=${confirmation}`)
         } else {
             redirect('/signin')
 

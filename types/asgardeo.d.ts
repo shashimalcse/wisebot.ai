@@ -18,3 +18,49 @@ interface CodeValidateResult {
 interface OrganizationExistsResult {
     available: boolean;
 }
+
+interface OrganizationCreateResult {
+    id: string;
+    name: string;
+    status: string;
+    created: string;
+    lastModified: string;
+    type: string;
+    parent: {
+        id: string;
+        ref: string;
+    };
+};
+
+interface UserListResponse {
+    totalResults: number;
+    startIndex: number;
+    itemsPerPage: number;
+    schemas: string[];
+    Resources: UserResource[];
+}
+
+interface UserResource {
+    emails: string[];
+    meta: Meta;
+    id: string;
+    userName: string;
+    "urn:scim:wso2:schema": UserScimWso2Schema;
+}
+
+interface Meta {
+    created: string;
+    location: string;
+    lastModified: string;
+    resourceType: string;
+}
+
+interface UserScimWso2Schema {
+    accountLocked: string;
+    accountState: string;
+    lockedReason: string;
+    preferredChannel: string;
+    userSource: string;
+    idpType: string;
+    userAccountType: string;
+}

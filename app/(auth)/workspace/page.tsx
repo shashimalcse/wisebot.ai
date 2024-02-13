@@ -5,29 +5,34 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 
-const isWorkSpaceNameAvailable = async (name: string): Promise<boolean> => {
+const isWorkSpaceNameAvailable = async (name: string, confirmation: string): Promise<boolean> => {
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_HOSTED_URL!}/api/workspace/check-workspace?workspace-name=${name}`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json'
-      }
+    const response = await fetch(`${process.env.NEXT_PUBLIC_HOSTED_URL!}/api/workspace/check?workspace-name=${name}&confirmation=${confirmation}`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        }
     });
-  
+
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+        throw new Error('Network response was not ok');
     }
-  
+
     const data = await response.json();
-    return data;
-  };
+    return data.available;
+};
 
 export default function WorkSpace() {
 
+    const searchParams = useSearchParams()
+    const confirmation = searchParams.get('confirmation')
+    console.log(searchParams.get('username'))
+    const username = searchParams.get('username')
     return (
         <div className="flex flex-row h-screen w-screen">
             <div className="flex items-center justify-center basis-1/2 bg-foreground">
@@ -36,20 +41,52 @@ export default function WorkSpace() {
                 </div>
             </div>
             <div className="flex items-center justify-center basis-1/2 bg-white">
-                <InputForm/>
+                <InputForm confirmation={confirmation ? confirmation : ""} username={username ? username : ""}/>
             </div>
         </div>
     )
 }
 
+const createWorkSpace = async (name: string, confirmation: string, username: string): Promise<boolean> => {
 
-const FormSchema = z.object({
-    workspace: z.string().min(6, {
-        message: "Workspace name must be at least 6 characters.",
-    }),
-})
+    const response = await fetch(`${process.env.NEXT_PUBLIC_HOSTED_URL!}/api/workspace/create?workspace-name=${name}&confirmation=${confirmation}&username=${username}`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
 
-const InputForm = () => {
+    if (!response.ok) {
+        throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    return data.available;
+};
+
+
+type InputFormProps = {
+    confirmation: string,
+    username: string,
+}
+
+
+const InputForm = ({ confirmation, username }: InputFormProps) => {
+
+    const FormSchema = z.object({
+        workspace: z.string().min(6, {
+            message: "Workspace name must be at least 6 characters.",
+        }).refine(async (value) => {
+
+            const isValid = await isWorkSpaceNameAvailable(value, confirmation);
+            if (!isValid) {
+                return false;
+            }
+            return value;
+        }, {
+            message: "Workspace name not available"
+        }),
+    })
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
@@ -58,16 +95,17 @@ const InputForm = () => {
     })
 
     async function onSubmit(data: z.infer<typeof FormSchema>) {
-        const result =  await isWorkSpaceNameAvailable(data.workspace)
-        toast({
-            title: "You submitted the following values:",
-            description: (
-                <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                    <code className="text-white">{result? "available" : "already exists"}</code>
-                </pre>
-            ),
-        })
+        const result = await isWorkSpaceNameAvailable(data.workspace, confirmation)
+        if (result) {
+            const orgResult = await createWorkSpace(data.workspace, confirmation, username)
+            console.log(orgResult)
+        } else {
+            toast({
+                title: "Workspace name not available. Please use another one"
+            })
+        }
     }
+
 
     return (
         <Form {...form}>
