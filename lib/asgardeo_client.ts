@@ -38,20 +38,20 @@ class AsgardeoClient {
                 body: body.toString(),
             });
 
-            if (!response.ok) {
-                throw new Error(`Error: ${response.status}`);
+            if (response.status === 200) {
+                const data = await response.json();
+                this.accessToken = data.access_token;
+            } else {
+                throw new Error('Error while introspecting confirmation code');
             }
-
-            const data = await response.json();
-            this.accessToken = data.access_token;
         } catch (error) {
-            console.error('Error fetching access token:', error);
+            throw new Error('Error fetching access token');
         }
     }
 
     public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResult | undefined> {
 
-        
+
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_ORGANIZATION_URL}/api/identity/user/v1.0/introspect-code`, {
                 method: 'POST',
@@ -69,7 +69,6 @@ class AsgardeoClient {
                     "properties": []
                 })
             });
-            console.log(response.status)
             if (response.status === 202) {
                 const data: CodeIntrospectResult = await response.json();
                 return data;
@@ -77,11 +76,10 @@ class AsgardeoClient {
                 await this.retrieveAccessToken();
                 await this.intropectConfirmationCode(code);
             } else {
-                console.log(response.status)
-                throw new Error('Fetch did not return the expected status code of 202');
+                throw new Error('Error while introspecting confirmation code');
             }
         } catch (error) {
-            console.error('Error fetching data:', error);
+            throw new Error('Error while introspecting confirmation code');
         }
     }
 
@@ -104,7 +102,7 @@ class AsgardeoClient {
                     "properties": []
                 })
             });
-    
+
             if (response.status === 202) {
                 const data: CodeValidateResult = await response.json();
                 return data;
@@ -112,11 +110,10 @@ class AsgardeoClient {
                 await this.retrieveAccessToken();
                 await this.validateConfirmationCode(code);
             } else {
-                console.log(response.status)
-                throw new Error('Fetch did not return the expected status code of 202');
+                throw new Error('Error while validating confirmation code');
             }
         } catch (error) {
-            console.error('Error fetching data:', error);
+            throw new Error('Error while validating confirmation code');
         }
     }
 
@@ -134,19 +131,18 @@ class AsgardeoClient {
                     "name": orgName,
                 })
             });
-    
-            if (response.status === 202) {
+
+            if (response.status === 200) {
                 const data: OrganizationExistsResult = await response.json();
                 return data.available;
             } else if (response.status == 401) {
                 await this.retrieveAccessToken();
                 await this.isOrgnizationAlreadyExists(orgName);
             } else {
-                console.log(response.status)
-                throw new Error('Fetch did not return the expected status code of 202');
+                throw new Error('Error while checking organization name exists');
             }
         } catch (error) {
-            console.error('Error fetching data:', error);
+            throw new Error('Error while checking organization name exists');
         }
     }
 }
@@ -156,10 +152,10 @@ let asgardeoClient: AsgardeoClient;
 if (process.env.NODE_ENV === 'production') {
     asgardeoClient = new AsgardeoClient();
 } else {
-  if (!globalThis.asgardeoClient) {
-    globalThis.asgardeoClient = new AsgardeoClient();
-  }
-  asgardeoClient = globalThis.asgardeoClient;
+    if (!globalThis.asgardeoClient) {
+        globalThis.asgardeoClient = new AsgardeoClient();
+    }
+    asgardeoClient = globalThis.asgardeoClient;
 }
 
 export default asgardeoClient;
