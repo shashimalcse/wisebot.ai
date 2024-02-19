@@ -18,7 +18,7 @@ class AsgardeoClient {
 
     public async retrieveAccessToken(): Promise<void> {
 
-        const url = `${process.env.NEXT_PUBLIC_ASGARDEO_BASE_ORGANIZATION_URL}/oauth2/token`;
+        const url = `${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/oauth2/token`;
         const headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': '*/*',
@@ -27,8 +27,8 @@ class AsgardeoClient {
         const body = new URLSearchParams({
             'grant_type': 'client_credentials',
             'scope': 'internal_identity_mgt_view internal_identity_mgt_update internal_identity_mgt_create internal_identity_mgt_delete internal_organization_view internal_organization_create internal_user_mgt_list internal_user_mgt_view',
-            'client_id': process.env.CLIENT_ID!,
-            'client_secret': process.env.CLIENT_SECRET!,
+            'client_id': process.env.MGT_CLIENT_ID!,
+            'client_secret': process.env.MGT_CLIENT_SECRET!,
         });
 
         try {
@@ -53,7 +53,7 @@ public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResu
 
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_ORGANIZATION_URL}/api/identity/user/v1.0/introspect-code`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/api/identity/user/v1.0/introspect-code`, {
                 method: 'POST',
                 headers: {
                     'accept': 'application/json',
@@ -86,7 +86,7 @@ public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResu
     public async validateConfirmationCode(code: string): Promise<CodeValidateResult | undefined> {
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_ORGANIZATION_URL}/api/identity/user/v1.0/validate-code`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/api/identity/user/v1.0/validate-code`, {
                 method: 'POST',
                 headers: {
                     'accept': 'application/json',
@@ -117,40 +117,12 @@ public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResu
         }
     }
 
-    public async isOrgnizationAvailable(orgName: string): Promise<boolean | undefined> {
-
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/api/server/v1/organizations/check-name`, {
-                method: 'POST',
-                headers: {
-                    'accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await this.getAccessToken()}`,
-                },
-                body: JSON.stringify({
-                    "name": orgName,
-                })
-            });
-            if (response.status === 200) {
-                const data: OrganizationExistsResult = await response.json();
-                return data.available;
-            } else if (response.status == 401) {
-                await this.retrieveAccessToken();
-                await this.isOrgnizationAvailable(orgName);
-            } else {
-                throw new Error('Error while checking organization name exists');
-            }
-        } catch (error) {
-            throw new Error('Error while checking organization name exists');
-        }
-    }
-
     public async createOrgnization(orgName: string, username: string): Promise<OrganizationCreateResult | undefined> {
 
         try {
             const userId = await this.getUserIdbyUsername(username)
             console.log("userid :" + userId)
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/api/server/v1/organizations`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_ORGANIZATION_URL}/api/server/v1/organizations`, {
                 method: 'POST',
                 headers: {
                     'accept': 'application/json',
@@ -190,7 +162,7 @@ public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResu
     private async getUserIdbyUsername(username: string): Promise<string | undefined> {
 
         try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_ORGANIZATION_URL}/scim2/Users?domain=DEFAULT&excludedAttributes=groups,roles&filter=emails+eq+${username}`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/scim2/Users?domain=DEFAULT&excludedAttributes=groups,roles&filter=emails+eq+${username}`, {
                 method: 'GET',
                 headers: {
                     'accept': 'application/json',
