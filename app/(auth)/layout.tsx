@@ -3,6 +3,7 @@ import '../globals.css'
 import { redirect } from 'next/navigation';
 import { Toaster } from '@/components/ui/toaster';
 import Provider from '../(context)/client-provider';
+import { options } from '../api/auth/[...nextauth]/options';
 
 export default async function RootLayout({
   children,
@@ -10,7 +11,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
 
-  const session = await getServerSession();
+  const session = await getServerSession(options);
   if (session) {
     redirect("/")
   }

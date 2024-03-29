@@ -4,6 +4,7 @@ import '../globals.css'
 import { getServerSession } from "next-auth";
 import Provider from "../(context)/client-provider";
 import { redirect } from "next/navigation";
+import { options } from "../api/auth/[...nextauth]/options";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,8 +18,8 @@ export default async function asyncRootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getServerSession();
-  if (!session) {
+  const session = await getServerSession(options);
+  if (!session?.idToken) {
     redirect("/signin")
   }
   return (
