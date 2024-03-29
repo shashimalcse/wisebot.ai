@@ -13,7 +13,6 @@ export default function Home() {
                 <Button variant="outline" type="button" onClick={() => 
                   signOut().then(() => {
                     const id_token_hint = session?.idToken ? session.idToken : ""
-                    console.log(id_token_hint)
                     const logoutUrl = `${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL!}/oidc/logout?id_token_hint=${id_token_hint}&post_logout_redirect_uri=${process.env.NEXT_PUBLIC_HOSTED_URL!}`
                     router.push(logoutUrl)
                   })}>

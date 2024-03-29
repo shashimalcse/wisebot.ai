@@ -1,4 +1,5 @@
 import { NextAuthOptions } from 'next-auth';
+import superbaseClient from '../../../../lib/superbase_client';
 export const options: NextAuthOptions = {
     // Secret for Next-auth, without this JWT encryption/decryption won't work
     secret: process.env.NEXTAUTH_SECRET,
@@ -31,19 +32,33 @@ export const options: NextAuthOptions = {
     ],
     callbacks: {
         async jwt({ token, account, profile }: any) {
+            console.log(profile)
             if (profile) {
                 token.id = profile.sub;
             }
             if (account) {
                 token.id_token = account.id_token
-                token.org_id = account.org_id
+                token.org_id = profile.org_id
             }
             return token;
         },
         async session({ session, token, user }: any) {
             session.user.id = token.id;
+            session.orgId= token.org_id
             session.idToken = token.id_token
             return session;
         },
-    }
+        async signIn({ user, account, profile, email, credentials }: any) {
+            
+            if (profile.org_id !== process.env.ASGARDEO_ORG_ID) {
+                return false
+            }
+            superbaseClient.getOwnerOrg(profile.sub).then((data:any) => {
+                if (data) {
+                    
+                }
+            })
+            return true
+        }
+    },
 };

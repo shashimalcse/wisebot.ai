@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import asgardeoClient from '../../../../lib/asgardeo_client';
-import { redirect } from 'next/navigation';
+import superbaseClient from '../../../../lib/superbase_client';
 
 export async function POST(request: NextRequest) {
 
@@ -12,8 +12,14 @@ export async function POST(request: NextRequest) {
         const introspectResult = await asgardeoClient.intropectConfirmationCode(confirmation)
         if ((introspectResult && !introspectResult.isExpired)) {
             if (workSpaceName && username) {
-                const OrganizationCreateResult = await asgardeoClient.createOrgnization(workSpaceName, username)
-                const responseBody = JSON.stringify(OrganizationCreateResult);
+                const organizationCreateResult = await asgardeoClient.createOrgnization(workSpaceName, username)
+                const userID = await asgardeoClient.getUserIdbyUsername(username);
+                if (userID && organizationCreateResult?.id) {
+                    console.log("creating owner org")
+                    await superbaseClient.createOwnerOrg(userID, organizationCreateResult.id)
+                }
+                await asgardeoClient.validateConfirmationCode(confirmation)
+                const responseBody = JSON.stringify(organizationCreateResult);
                 return new NextResponse(responseBody)
             } else {
                 return new NextResponse(`Workspace name is not avialable`, {

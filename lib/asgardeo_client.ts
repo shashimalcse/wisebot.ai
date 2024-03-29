@@ -144,7 +144,6 @@ public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResu
                     ]
                 })
             });
-            console.log(response.status)
             if (response.status === 201) {
                 const data: OrganizationCreateResult = await response.json();
                 return data;
@@ -159,7 +158,7 @@ public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResu
         }
     }
 
-    private async getUserIdbyUsername(username: string): Promise<string | undefined> {
+    public async getUserIdbyUsername(username: string): Promise<string | undefined> {
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/scim2/Users?domain=DEFAULT&excludedAttributes=groups,roles&filter=emails+eq+${username}`, {

@@ -5,28 +5,12 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-
-const isWorkSpaceNameAvailable = async (name: string, confirmation: string): Promise<boolean> => {
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_HOSTED_URL!}/api/workspace/check?workspace-name=${name}&confirmation=${confirmation}`, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json'
-        }
-    });
-
-    if (!response.ok) {
-        throw new Error('Network response was not ok');
-    }
-
-    const data = await response.json();
-    return data.available;
-};
 
 export default function WorkSpace() {
 
@@ -93,7 +77,7 @@ const InputForm = ({ confirmation, username }: InputFormProps) => {
         const orgResult = await createWorkSpace(data.workspace, confirmation, username)
         console.log(orgResult)
         if (orgResult) {
-            router.replace('/')
+            signIn('Asgardeo')
         }
     }
         return (
