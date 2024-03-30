@@ -15,9 +15,10 @@ export async function POST(request: NextRequest) {
                 const organizationCreateResult = await asgardeoClient.createOrgnization(workSpaceName, username)
                 const userID = await asgardeoClient.getUserIdbyUsername(username);
                 if (userID && organizationCreateResult?.id) {
-                    console.log("creating owner org")
                     await superbaseClient.createOwnerOrg(userID, organizationCreateResult.id)
+                    const administratorRoleId = await asgardeoClient.getAdministorRoleId(organizationCreateResult.id)
                 }
+                
                 await asgardeoClient.validateConfirmationCode(confirmation)
                 const responseBody = JSON.stringify(organizationCreateResult);
                 return new NextResponse(responseBody)
@@ -37,5 +38,4 @@ export async function POST(request: NextRequest) {
             status: 400,
         })
     }
-
 }

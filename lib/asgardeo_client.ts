@@ -16,6 +16,22 @@ class AsgardeoClient {
         return this.accessToken!;
     }
 
+    public async getSwitchedAccessToken(subOrgId: string): Promise<string> {
+        const body = {
+            param: this.accessToken,
+            subOrgId: subOrgId
+        };
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_HOSTED_URL!}/api/settings/switchorg`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body)
+        });
+        return await res.json();
+    }
+
     public async retrieveAccessToken(): Promise<void> {
 
         const url = `${process.env.NEXT_PUBLIC_ASGARDEO_BASE_URL}/oauth2/token`;
@@ -49,7 +65,7 @@ class AsgardeoClient {
         }
     }
 
-public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResult | undefined> {
+    public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResult | undefined> {
 
 
         try {
@@ -131,7 +147,7 @@ public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResu
                 },
                 body: JSON.stringify({
                     "name": orgName,
-                    "parentId":process.env.ASGARDEO_ORG_ID,
+                    "parentId": process.env.ASGARDEO_ORG_ID,
                     "attributes": [
                         {
                             "key": "creator.id",
@@ -180,6 +196,67 @@ public async intropectConfirmationCode(code: string): Promise<CodeIntrospectResu
             }
         } catch (error) {
             throw new Error('Error while getting user id of the use');
+        }
+    }
+
+    public async getAdministorRoleId(subOrgId: string): Promise<string | undefined> {
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_ORGANIZATION_URL}/api/server/v1/organizations/${subOrgId}/roles?filter=name%20eq%20Administrator}`, {
+                method: 'GET',
+                headers: {
+                    'accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${await this.getSwitchedAccessToken(subOrgId)}`,
+                }
+            });
+            if (response.status === 200) {
+                const data: UserListResponse = await response.json();
+                return data.Resources[0].id;
+            } else if (response.status == 401) {
+                await this.retrieveAccessToken();
+                await this.getAdministorRoleId(subOrgId);
+            } else {
+                throw new Error('Error while getting administrator role id of the suborg');
+            }
+        } catch (error) {
+            throw new Error('Error while getting administrator role id of the suborg');
+        }
+    }
+
+    public async assignAdministorRole(subOrgId: string, roleId: string, userId:string): Promise<string | undefined> {
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_ASGARDEO_BASE_ORGANIZATION_URL}/api/server/v1/organizations/${subOrgId}/roles/${roleId}`, {
+                method: 'PATCH',
+                headers: {
+                    'accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${await this.getSwitchedAccessToken(subOrgId)}`,
+                },
+                body: JSON.stringify({
+                    operations: [
+                        {
+                            op: "ADD",
+                            path: "users",
+                            value: [
+                                userId
+                            ]
+                        }
+                    ]
+                })
+            });
+            if (response.status === 200) {
+                const data: UserListResponse = await response.json();
+                return data.Resources[0].id;
+            } else if (response.status == 401) {
+                await this.retrieveAccessToken();
+                await this.getAdministorRoleId(subOrgId);
+            } else {
+                throw new Error('Error while getting administrator role id of the suborg');
+            }
+        } catch (error) {
+            throw new Error('Error while getting administrator role id of the suborg');
         }
     }
 }

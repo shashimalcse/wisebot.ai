@@ -10,6 +10,8 @@ export default function Home() {
   const { data: session, status } = useSession()
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <h1 className="text-4xl font-bold">{session?.orgName}</h1>
+
                 <Button variant="outline" type="button" onClick={() => 
                   signOut().then(() => {
                     const id_token_hint = session?.idToken ? session.idToken : ""
